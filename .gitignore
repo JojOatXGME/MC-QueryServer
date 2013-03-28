@@ -1,6 +1,19 @@
+# Java Class Files #
 *.class
 
-# Package Files #
+# Java Package Files #
 *.jar
 *.war
 *.ear
+
+# Binery Dir #
+bin/
+
+# Eclipse Project Files #
+.project
+.classpath
+.settings/
+
+# Operating System Files #
+Thumbs.db
+.DS_Store
