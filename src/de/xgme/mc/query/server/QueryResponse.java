@@ -41,6 +41,7 @@ public class QueryResponse {
 		output.write("Length: "+message.length()+"\n\r");
 		output.write("\n\r");
 		output.write(message);
+		output.write("\n\r");
 		
 		output.flush();
 		
@@ -50,12 +51,26 @@ public class QueryResponse {
 
 	// ### public API ###
 
-	public void addToMessage(String str) {
+	public void print(String str) {
 		responseMessage.append(str);
 	}
 
-	public void addToMessage(Object obj) {
+	public void print(Object obj) {
 		responseMessage.append(obj);
+	}
+
+	public void printLine(String str) {
+		print(str);
+		printLine();
+	}
+
+	public void printLine(Object obj) {
+		print(obj);
+		printLine();
+	}
+
+	public void printLine() {
+		responseMessage.append("\n\r");
 	}
 
 	public String getContent() {

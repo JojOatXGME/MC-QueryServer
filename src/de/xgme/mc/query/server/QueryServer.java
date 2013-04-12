@@ -208,7 +208,7 @@ public class QueryServer {
 							if (request.getQueryName().equals("login")) {
 								
 							} else if (request.getQueryName().equals("exit")) {
-								response.addToMessage("Close Connection");
+								response.printLine("Close Connection");
 								try {
 									response.send();
 								} catch (IOException e) {}
