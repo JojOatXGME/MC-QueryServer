@@ -176,6 +176,8 @@ public class QueryServer {
 	private class ConnectionHandler implements Runnable {
 		private final Socket clientSocket;
 		private int queryCount = 0;
+		private BufferedReader input  = null;
+		private BufferedWriter output = null;
 
 		private ConnectionHandler(final Socket socket) {
 			this.clientSocket = socket;
@@ -183,8 +185,6 @@ public class QueryServer {
 
 		@Override
 		public void run() {
-			BufferedReader input  = null;
-			BufferedWriter output = null;
 			try {
 				input  = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(), "UTF-8"));
 				output = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream(), "UTF-8"));
@@ -252,14 +252,25 @@ public class QueryServer {
 			}
 		}
 
-		private synchronized void close() {
+		private synchronized void close(String message) {
 			logger.finest("Close connection to "+clientSocket.getInetAddress());
+			try {
+				output.write("Close Connection: "+message+"\n\r");
+				output.flush();
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
 			try {
 				clientSocket.close();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+		}
+
+		private boolean isClosed() {
+			return clientSocket.isClosed();
 		}
 	}
 
@@ -285,11 +296,11 @@ public class QueryServer {
 					catch (InterruptedException e) { stopAll(); }
 				}
 				if (cr.handler.queryCount != cr.queryCount) continue;
-				cr.handler.close();
+				cr.handler.close("Timeout");
 			}
 			while ((cr = cleanRequests.poll()) != null) {
-				if (cr.handler.clientSocket.isClosed()) continue;
-				cr.handler.close();
+				if (cr.handler.isClosed()) continue;
+				cr.handler.close("Stopping Server");
 			}
 		}
 		private void register(ConnectionHandler handler) {
