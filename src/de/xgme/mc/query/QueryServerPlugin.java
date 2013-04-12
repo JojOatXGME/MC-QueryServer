@@ -18,6 +18,7 @@ import org.bukkit.event.server.PluginDisableEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import de.xgme.mc.query.sample.ListPlayers;
 import de.xgme.mc.query.server.QueryHandler;
 import de.xgme.mc.query.server.QueryServer;
 
@@ -38,6 +39,10 @@ public class QueryServerPlugin extends JavaPlugin implements Listener {
 	public void onEnable() {
 		getServer().getPluginManager().registerEvents(this, this);
 		startServer();
+		// load samples
+		final ListPlayers listPlayers = new ListPlayers(getServer());
+		server.addQueryType("players", listPlayers, false);
+		server.addQueryType("list", listPlayers, false);
 	}
 
 	@Override
