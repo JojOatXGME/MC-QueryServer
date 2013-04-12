@@ -1,0 +1,3 @@
+name: XGME-QueryServer
+version: 0.1
+main: de.xgme.mc.query.QueryServerPlugin

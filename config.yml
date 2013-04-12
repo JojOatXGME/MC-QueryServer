@@ -1,0 +1,11 @@
+
+#userdb: file (has currently no effect)
+
+socket:
+  port: 5564
+  backlog: 0
+  #exitdelay: 0 (has currently no effect)
+  #bind: 127.0.0.1
+
+executor:
+    shutdown-timeout: 10
