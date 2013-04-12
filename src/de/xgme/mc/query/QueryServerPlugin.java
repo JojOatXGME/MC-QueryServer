@@ -4,6 +4,7 @@ import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -47,9 +48,10 @@ public class QueryServerPlugin extends JavaPlugin implements Listener {
 	@EventHandler
 	public void onPluginDisable(PluginDisableEvent event) {
 		Set<RegisteredQueryType> pluginQueries = pluginQueryMap.remove(event.getPlugin());
-		if (pluginQueries != null && isServerRunning()) {
+		if (pluginQueries != null) {
 			for (RegisteredQueryType queryType : pluginQueries) {
-				unregisterQueryType(queryType.queryName);
+				queryNames.remove(queryType.queryName.toLowerCase());
+				server.removeQueryType(queryType.queryName);
 			}
 		}
 	}
@@ -68,7 +70,7 @@ public class QueryServerPlugin extends JavaPlugin implements Listener {
 			return;
 		}
 		
-		final RegisteredQueryType queryType = new RegisteredQueryType(query, handler, runInPrimaryThread);
+		final RegisteredQueryType queryType = new RegisteredQueryType(query, handler, plugin, runInPrimaryThread);
 		Set<RegisteredQueryType> pluginQueries = pluginQueryMap.get(plugin);
 		if (pluginQueries == null) {
 			pluginQueries = new HashSet<RegisteredQueryType>();
@@ -80,13 +82,6 @@ public class QueryServerPlugin extends JavaPlugin implements Listener {
 		if (isServerRunning()) {
 				server.addQueryType(queryToLowerCase, handler, runInPrimaryThread);
 		}
-	}
-
-	private void unregisterQueryType(String queryName) {
-		getLogger().fine("unregister query type: "+queryName);
-		
-		server.removeQueryType(queryName);
-		queryNames.remove(queryName);
 	}
 
 	private boolean isServerRunning() {
@@ -121,9 +116,16 @@ public class QueryServerPlugin extends JavaPlugin implements Listener {
 		server.setExecutor(executor);
 		
 		// add load registered query types to server
-		for (Set<RegisteredQueryType> pluginQueries : pluginQueryMap.values()) {
-			for (RegisteredQueryType queryType : pluginQueries) {
-				server.addQueryType(queryType.queryName, queryType.handler, queryType.sync);
+		for (Entry<Plugin,Set<RegisteredQueryType>> pluginQueries : pluginQueryMap.entrySet()) {
+			if (pluginQueries.getKey().isEnabled()) {
+				for (RegisteredQueryType queryType : pluginQueries.getValue()) {
+					server.addQueryType(queryType.queryName, queryType.handler, queryType.sync);
+				}
+			} else {
+				for (RegisteredQueryType queryType : pluginQueries.getValue()) {
+					queryNames.remove(queryType.queryName.toLowerCase());
+				}
+				pluginQueries.getValue().clear();
 			}
 		}
 		
@@ -174,7 +176,9 @@ public class QueryServerPlugin extends JavaPlugin implements Listener {
 		private final QueryHandler handler;
 		private final boolean sync;
 
-		private RegisteredQueryType(String queryName, QueryHandler handler, boolean sync) {
+		private RegisteredQueryType(String queryName, QueryHandler handler,
+				Plugin plugin, boolean sync) {
+			
 			this.queryName = queryName;
 			this.handler = handler;
 			this.sync = sync;
